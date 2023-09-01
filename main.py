@@ -76,7 +76,7 @@ def librosa_energy_change():
             # Print grouped onset timings
             # for group in grouped_onsets:
             #     print("Group:", ", ".join([f"{time:.2f}" for time in group]))
-            return jsonify(results = grouped_onsets)
+            return jsonify(threshold=threshold, results = grouped_onsets)
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
 
