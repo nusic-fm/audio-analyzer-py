@@ -2,7 +2,7 @@ import io
 import os
 import librosa
 import numpy as np
-import essentia.standard as es
+# import essentia.standard as es
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -76,13 +76,14 @@ def librosa_energy_change():
             # Find the key using Essentia
 
             # Load the audio file
-            loader = es.MonoLoader(filename=audio_data)
-            audio = loader()
+            # loader = es.MonoLoader(filename=audio_data)
+            # audio = loader()
 
-            # Calculate the key
-            key_extractor = es.KeyExtractor()
-            key, scale, strength = key_extractor(audio)
-            return jsonify(threshold=threshold, results = grouped_onsets, bpm=tempo, key=f"{key} {scale}")
+            # # Calculate the key
+            # key_extractor = es.KeyExtractor()
+            # key, scale, strength = key_extractor(audio)
+            # , key=f"{key} {scale}"
+            return jsonify(threshold=threshold, results = grouped_onsets, bpm=tempo)
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
 
