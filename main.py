@@ -1,11 +1,8 @@
 import io
 import os
-    
 import librosa
-# import librosa.display
 import numpy as np
-# import matplotlib.pyplot as plt
-
+import essentia.standard as es
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -37,9 +34,12 @@ def librosa_energy_change():
             # Load audio file
             # audio_file = "/content/audio.mp3"
             # y, sr = librosa.load(temp_path)
-            tmp = io.BytesIO(file.read())
-            y, sr = librosa.load(tmp)
+            audio_data = io.BytesIO(file.read())
+            y, sr = librosa.load(audio_data)
 
+            # Perform beat tracking
+            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+            
             # Compute onset envelope
             onset_env = librosa.onset.onset_strength(y=y, sr=sr)
 
@@ -64,7 +64,7 @@ def librosa_energy_change():
 
             for i, interval in enumerate(intervals):
                 threshold = dynamic_threshold(interval)
-                print(threshold)
+                # print(threshold)
                 if interval > threshold:
                     grouped_onsets.append(current_group)
                     current_group = [onset_times[i + 1]]
@@ -73,10 +73,16 @@ def librosa_energy_change():
 
             grouped_onsets.append(current_group)
 
-            # Print grouped onset timings
-            # for group in grouped_onsets:
-            #     print("Group:", ", ".join([f"{time:.2f}" for time in group]))
-            return jsonify(threshold=threshold, results = grouped_onsets)
+            # Find the key using Essentia
+
+            # Load the audio file
+            loader = es.MonoLoader(filename=audio_data)
+            audio = loader()
+
+            # Calculate the key
+            key_extractor = es.KeyExtractor()
+            key, scale, strength = key_extractor(audio)
+            return jsonify(threshold=threshold, results = grouped_onsets, bpm=tempo, key=f"{key} {scale}")
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
 
