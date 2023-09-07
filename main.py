@@ -38,7 +38,8 @@ def librosa_energy_change():
             y, sr = librosa.load(audio_data)
 
             # Perform beat tracking
-            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+            tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+            beat_times = librosa.frames_to_time(beats, sr=sr)
             
             # Compute onset envelope
             onset_env = librosa.onset.onset_strength(y=y, sr=sr)
@@ -83,7 +84,7 @@ def librosa_energy_change():
             # key_extractor = es.KeyExtractor()
             # key, scale, strength = key_extractor(audio)
             # , key=f"{key} {scale}"
-            return jsonify(threshold=threshold, results = grouped_onsets, bpm=tempo)
+            return jsonify(threshold=threshold, results = grouped_onsets, bpm=round(tempo), downbeat=beat_times[0])
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
 
