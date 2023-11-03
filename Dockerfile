@@ -7,6 +7,8 @@ WORKDIR /app
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+RUN pip install --upgrade Flask
+RUN pip install --upgrade Werkzeug
 
 COPY . .
 
