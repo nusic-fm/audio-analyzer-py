@@ -90,31 +90,35 @@ def librosa_energy_change():
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
 
-def process_audio(temp_path):
-    output_files = []
+def process_audio(temp_path, ref_temp_path):
+    # output_files = []
     current_directory = os.path.dirname(os.path.abspath(__file__))
-    reference_file_path = os.path.join(current_directory, "reference.mp3")
+    # reference_file_path = os.path.join(current_directory, "reference.mp3")
     print("Initiating the Process")
         # Process the audio and save the results in the temporary directory
     mg.process(
         target=temp_path,
-        reference=reference_file_path,
+        reference=ref_temp_path,
         results=[
-            mg.pcm16("my_song_master_16bit.wav"),
+            # mg.pcm16("my_song_master_16bit.wav"),
             mg.pcm24("my_song_master_24bit.wav"),
         ],
     )
     
     # Collect the output files
-    output_files.append(os.path.join(current_directory, "my_song_master_16bit.wav"))
-    output_files.append(os.path.join(current_directory, "my_song_master_24bit.wav"))
-    return output_files
+    # output_files.append(os.path.join(current_directory, "my_song_master_16bit.wav"))
+    # output_files.append(os.path.join(current_directory, "my_song_master_24bit.wav"))
+    # return output_files
+    return os.path.join(current_directory, "my_song_master_24bit.wav")
 
 @app.route("/matchering", methods=["POST"])
 def matchering():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
+    if 'referenceFile' not in request.files:
+        return jsonify({'error': 'Reference File not provided, use referenceFile as param'})
     file = request.files['file']
+    referenceFile = request.files['referenceFile']
     print(file.filename)
 
     if file.filename == '':
@@ -124,11 +128,14 @@ def matchering():
         # Save the uploaded audio file to a temporary location
         temp_path = tempfile.mktemp(suffix='.wav')
         file.save(temp_path)
+        # Save the uploaded audio file to a temporary location
+        ref_temp_path = tempfile.mktemp(suffix='.mp3')
+        referenceFile.save(ref_temp_path)
         print("Track is received and saved on the local", temp_path)
         
         try:
-            output_files = process_audio(temp_path)
-            return send_file(output_files[1], as_attachment=True)
+            output_file = process_audio(temp_path, ref_temp_path)
+            return send_file(output_file, as_attachment=True)
         except Exception as e:
             return jsonify({'error': f'{str(e)}'})
 
