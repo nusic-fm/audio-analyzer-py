@@ -3,7 +3,9 @@ import os
 import librosa
 import numpy as np
 # import essentia.standard as es
-from flask import Flask, request, jsonify
+from flask import Flask, send_file, request, jsonify
+import matchering as mg
+import tempfile
 
 app = Flask(__name__)
 # Configure a temporary directory to store uploaded files
@@ -87,6 +89,48 @@ def librosa_energy_change():
             return jsonify(threshold=threshold, results = grouped_onsets, bpm=round(tempo), downbeat=beat_times[0])
         except Exception as e:
             return jsonify({'error': f'Error loaing file: {str(e)}'})
+
+def process_audio(temp_path):
+    output_files = []
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    reference_file_path = os.path.join(current_directory, "reference.mp3")
+    print("Initiating the Process")
+        # Process the audio and save the results in the temporary directory
+    mg.process(
+        target=temp_path,
+        reference=reference_file_path,
+        results=[
+            mg.pcm16("my_song_master_16bit.wav"),
+            mg.pcm24("my_song_master_24bit.wav"),
+        ],
+    )
+    
+    # Collect the output files
+    output_files.append(os.path.join(current_directory, "my_song_master_16bit.wav"))
+    output_files.append(os.path.join(current_directory, "my_song_master_24bit.wav"))
+    return output_files
+
+@app.route("/matchering", methods=["POST"])
+def matchering():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
+    file = request.files['file']
+    print(file.filename)
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
+    
+    if file:
+        # Save the uploaded audio file to a temporary location
+        temp_path = tempfile.mktemp(suffix='.wav')
+        file.save(temp_path)
+        print("Track is received and saved on the local", temp_path)
+        
+        try:
+            output_files = process_audio(temp_path)
+            return send_file(output_files[1], as_attachment=True)
+        except Exception as e:
+            return jsonify({'error': f'{str(e)}'})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
