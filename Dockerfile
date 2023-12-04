@@ -2,6 +2,7 @@ FROM python:3.11-slim
 
 # Install required system libraries
 RUN apt-get update && apt-get install -y libsndfile1 ffmpeg
+RUN apt-get install git
 
 WORKDIR /app
 
