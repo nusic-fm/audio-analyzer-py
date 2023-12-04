@@ -7,6 +7,7 @@ RUN apt-get install -y git
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
+RUN pip install git+https://github.com/CPJKU/madmom
 RUN pip install -r requirements.txt
 RUN pip3 install natten -f https://shi-labs.com/natten/wheels/cu118/torch2.0.0/index.html
 RUN pip install --upgrade Flask
