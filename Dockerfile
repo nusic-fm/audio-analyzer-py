@@ -10,12 +10,12 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-RUN pip install torch==2.1.0
+RUN pip install torch
 RUN pip install ninja
 RUN pip install git+https://github.com/CPJKU/madmom
 RUN pip install allin1
 
-RUN pip3 install natten -f https://shi-labs.com/natten/wheels/cu118/torch2.0.0/index.html
+RUN pip3 install natten -f https://shi-labs.com/natten/wheels/cpu/torch2.0.0/index.html
 
 RUN pip install --upgrade Flask
 RUN pip install --upgrade Werkzeug
