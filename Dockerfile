@@ -10,7 +10,7 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-RUN pip install torch
+RUN pip install torch==2.0.0
 RUN pip install ninja
 RUN pip install git+https://github.com/CPJKU/madmom
 RUN pip install allin1
