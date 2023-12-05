@@ -144,8 +144,6 @@ def matchering():
 def allInOne():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
-    if 'referenceFile' not in request.files:
-        return jsonify({'error': 'Reference File not provided, use referenceFile as param'})
     file = request.files['file']
     print(file.filename)
     if file.filename == '':
