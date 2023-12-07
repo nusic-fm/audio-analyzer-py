@@ -6,7 +6,6 @@ import numpy as np
 from flask import Flask, send_file, request, jsonify
 import matchering as mg
 import tempfile
-import allin1
 
 app = Flask(__name__)
 # Configure a temporary directory to store uploaded files
@@ -137,27 +136,6 @@ def matchering():
         try:
             output_file = process_audio(temp_path, ref_temp_path)
             return send_file(output_file, as_attachment=True)
-        except Exception as e:
-            return jsonify({'error': f'{str(e)}'})
-
-@app.route("/all-in-one", methods=["POST"])
-def allInOne():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
-    file = request.files['file']
-    print(file.filename)
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'})
-    if file:
-        # Save the uploaded audio file to a temporary location
-        temp_path = tempfile.mktemp(suffix='.wav')
-        file.save(temp_path)
-        print("Track is received and saved on the local", temp_path)
-        
-        try:
-            result = allin1.analyze(temp_path, out_dir='./struct')
-            
-            return jsonify({'segments': result.segments, 'bpm': result.bpm, 'beats': result.beats, 'downbeats': result.downbeats, 'beat_positions': result.beat_positions})
         except Exception as e:
             return jsonify({'error': f'{str(e)}'})
 
