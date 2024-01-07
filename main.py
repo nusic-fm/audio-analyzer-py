@@ -1,13 +1,18 @@
 import io
 import os
+import time
+from gradio_client import Client
 import librosa
 import numpy as np
 # import essentia.standard as es
 from flask import Flask, send_file, request, jsonify
 import matchering as mg
 import tempfile
+from pydub import AudioSegment
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 # Configure a temporary directory to store uploaded files
 # UPLOAD_FOLDER = 'temp_uploads'
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -138,6 +143,36 @@ def matchering():
             return send_file(output_file, as_attachment=True)
         except Exception as e:
             return jsonify({'error': f'{str(e)}'})
+
+@app.route("/create-snippet", methods=["POST"])
+def snippets():
+    start = time.time()
+    audio = request.files['audio']
+    input_audio_temp_path = tempfile.mktemp()
+    audio.save(input_audio_temp_path)
+    
+    prompt = request.form.get('prompt')
+    duration = float(request.form.get('duration') or 3)
+
+    client = Client("https://nusic-musicgen.hf.space/")
+    music_gen_result_path = client.predict(
+                    "melody",	# str  in 'Model' Radio component
+                    prompt,	# str  in 'Input Text' Textbox component
+                    input_audio_temp_path,	# str (filepath or URL to file) in 'File' Audio component
+                    round(duration, 3),	# int | float (numeric value between 1 and 120) in 'Duration' Slider component TODO
+                    250,	# int | float  in 'Top-k' Number component
+                    0,	# int | float  in 'Top-p' Number component
+                    1,	# int | float  in 'Temperature' Number component
+                    3,	# int | float  in 'Classifier Free Guidance' Number component
+                    fn_index=1
+    )
+    # Load the MP4 file into wav
+    audio = AudioSegment.from_file(music_gen_result_path, format="mp4")
+    # Export the audio to WAV format
+    audio.export("generated.wav", format="wav")
+    now = time.time()
+    print(f"Process Time: {round(now - start)}")
+    return send_file("generated.wav", as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
