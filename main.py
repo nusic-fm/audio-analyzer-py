@@ -13,7 +13,7 @@ import matchering as mg
 import tempfile
 from pydub import AudioSegment
 from flask_cors import CORS
-from huggingface_hub import restart_space, pause_space
+from huggingface_hub import restart_space, pause_space, SpaceHardware, request_space_hardware
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -196,6 +196,27 @@ def stop_space():
     try:
         pause_space(repo_id=repo_id, token=os.getenv('HF_TOKEN'))
         return "Paused"
+    except Exception as e:
+        print(e)
+        return "Error", 500
+
+@app.route("/upgrade-space", methods=["POST"])
+def upgrade_space():
+    requested = request.form.get('hardware')
+    repo_id = "nusic/MusicGen"
+    try:
+        
+        if requested == SpaceHardware.T4_SMALL:
+            hardware = SpaceHardware.T4_SMALL
+        elif requested == SpaceHardware.T4_MEDIUM:
+            hardware = SpaceHardware.T4_MEDIUM
+        elif requested == SpaceHardware.A10G_SMALL:
+            hardware = SpaceHardware.A10G_SMALL
+        else:
+            hardware = SpaceHardware.A10G_LARGE
+
+        request_space_hardware(repo_id=repo_id, token=os.getenv('HF_TOKEN'), hardware=hardware)
+        return "Upgraded"
     except Exception as e:
         print(e)
         return "Error", 500
