@@ -4,5 +4,6 @@ matchering==2.0.6
 gradio_client
 pydub
 flask-cors
+python-dotenv
 # wheel==0.41.2
 # essentia

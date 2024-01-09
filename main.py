@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()
 import io
 import os
+import random
 import time
 from gradio_client import Client
 import librosa
@@ -10,6 +13,7 @@ import matchering as mg
 import tempfile
 from pydub import AudioSegment
 from flask_cors import CORS
+from huggingface_hub import restart_space, pause_space
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -168,11 +172,34 @@ def snippets():
     )
     # Load the MP4 file into wav
     audio = AudioSegment.from_file(music_gen_result_path, format="mp4")
+
+    filename = random.randint(1,1000000)
     # Export the audio to WAV format
-    audio.export("generated.wav", format="wav")
+    audio.export(f"{filename}.wav", format="wav")
     now = time.time()
     print(f"Process Time: {round(now - start)}")
-    return send_file("generated.wav", as_attachment=True)
+    return send_file(f"{filename}.wav", as_attachment=True)
+
+@app.route("/start-space", methods=["POST"])
+def start_space():
+    repo_id = "nusic/MusicGen"
+    try:
+        restart_space(repo_id=repo_id, token=os.getenv('HF_TOKEN'))
+        return "Restarted"
+    except Exception as e:
+        print(e)
+        return "Error", 500
+
+@app.route("/pause-space", methods=["POST"])
+def stop_space():
+    repo_id = "nusic/MusicGen"
+    try:
+        pause_space(repo_id=repo_id, token=os.getenv('HF_TOKEN'))
+        return "Paused"
+    except Exception as e:
+        print(e)
+        return "Error", 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
